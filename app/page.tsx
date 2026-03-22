@@ -24,7 +24,10 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>,
+    id: string
+  ) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (!element) return;
@@ -72,6 +75,7 @@ export default function Home() {
           >
             <div className="font-luxury text-sm tracking-widest text-white">EMYKA ASTRAL</div>
             <div className="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.2em] font-medium text-white/80">
+              <a href="#hero" onClick={(e) => handleNavClick(e, 'hero')} className="hover:text-emyka transition cursor-pointer">Inicio</a>
               <a href="#dolor" onClick={(e) => handleNavClick(e, 'dolor')} className="hover:text-emyka transition cursor-pointer">Origen</a>
               <a href="#solucion" onClick={(e) => handleNavClick(e, 'solucion')} className="hover:text-emyka transition cursor-pointer">Manual</a>
               <a href="#precio" onClick={(e) => handleNavClick(e, 'precio')} className="hover:text-emyka transition cursor-pointer">Acceso</a>
@@ -86,7 +90,7 @@ export default function Home() {
         </nav>
 
         {/* 2. HERO SECTION (Márgenes optimizados y Apple Look) */}
-        <section className="relative min-h-screen">
+        <section id="hero" className="relative min-h-screen">
           <Galaxy
             mouseRepulsion
             mouseInteraction
@@ -144,7 +148,7 @@ export default function Home() {
                     <img 
                       src="/emyka-avatar.png" 
                       alt="Emyka Avatar" 
-                      className="w-full max-w-[480px] lg:max-w-[520px] object-contain drop-shadow-[0_20px_100px_rgba(0,0,0,0.8)] ml-[-60px] lg:ml-[-120px]"
+                      className="w-full max-w-120 lg:max-w-130 object-contain drop-shadow-[0_20px_100px_rgba(0,0,0,0.8)] -ml-15 lg:-ml-30"
                     />
                   </motion.div>
 
@@ -152,7 +156,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="absolute bottom-10 right-0 lg:-right-5 bg-white/[0.02] hover:bg-black/04 backdrop-blur-[12px] border border-white/6 p-8 rounded-[2.5rem] max-w-[300px] hidden xl:block shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition-colors duration-200"
+                    className="absolute bottom-10 right-0 lg:-right-5 bg-white/2 hover:bg-black/04 backdrop-blur-md border border-white/6 p-8 rounded-[2.5rem] max-w-75 hidden xl:block shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition-colors duration-200"
                     style={{ WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' }}
                   >
                     <span className="text-[10px] text-emyka uppercase tracking-[0.3em] font-bold block mb-4">Detalles del Manual</span>
@@ -173,7 +177,7 @@ export default function Home() {
 
         {/* 🟣 SECCIÓN 2 — DOLOR (Personaje central con cápsulas alrededor) */}
         <section id="dolor" className="relative pt-28 pb-32 w-full overflow-hidden min-h-screen">
-          <div className="absolute inset-0 w-full h-full -z-10 bg-[radial-gradient(circle_at_center,_#1a052b_0%,_#000000_100%)]">
+          <div className="absolute inset-0 w-full h-full -z-10 bg-[radial-gradient(circle_at_center,#1a052b_0%,#000000_100%)]">
             <LightPillar
               topColor="#5227FF"
               bottomColor="#FF9FFC"
@@ -193,10 +197,10 @@ export default function Home() {
             <h2 className="text-4xl md:text-6xl font-luxury text-center mb-12">Si sientes que...</h2>
 
             <div className="relative w-full flex justify-center items-center py-12">
-                <div className="relative w-full max-w-4xl h-[500px]">
+                <div className="relative w-full max-w-4xl h-125">
                 {/* Center avatar */}
                 <div className="absolute left-1/2 top-[48%] -translate-x-1/2 -translate-y-1/2 z-20">
-                  <img src="/emyka-avatar_2.png" alt="Emyka Avatar" className="w-full max-w-[260px] md:max-w-[360px] object-contain drop-shadow-[0_22px_70px_rgba(0,0,0,0.5)]" />
+                  <img src="/emyka-avatar_2.png" alt="Emyka Avatar" className="w-full max-w-65 md:max-w-90 object-contain drop-shadow-[0_22px_70px_rgba(0,0,0,0.5)]" />
                 </div>
 
                 {/* Capsules arranged in a circle around the avatar */}

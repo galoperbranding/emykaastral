@@ -22,7 +22,6 @@ export default function ContactCard() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
-  const [tone, setTone] = useState<'default' | 'formal'>('default');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -63,7 +62,7 @@ export default function ContactCard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userText, tone }),
+        body: JSON.stringify({ message: userText }),
       });
 
       if (!response.ok) {
@@ -112,13 +111,13 @@ export default function ContactCard() {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="mb-4 w-[350px] md:w-[400px] h-[500px] bg-[#1a052b]/90 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden"
+            className="mb-4 w-87.5 md:w-100 h-125 bg-[#1a052b]/90 backdrop-blur-xl border border-white/10 rounded-4xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#980d6b] to-purple-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-white/20">
+                  <div className="w-10 h-10 rounded-full bg-linear-to-tr from-[#980d6b] to-purple-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-white/20">
                     EA
                   </div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1a052b]"></div>
@@ -128,16 +127,6 @@ export default function ContactCard() {
                   <p className="text-xs text-white/50 flex items-center gap-1">
                   </p>
                 </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <select
-                  value={tone}
-                  onChange={e => setTone(e.target.value as 'default' | 'formal')}
-                  className="bg-transparent text-xs text-white/70 border border-white/10 rounded px-2 py-1 focus:outline-none"
-                >
-                  <option value="default">Cercano</option>
-                  <option value="formal">Formal</option>
-                </select>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -165,7 +154,7 @@ export default function ContactCard() {
                   </div>
                 </div>
               ))}
-              body: JSON.stringify({ message: userText }),
+              {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-[#980d6b]/50 p-3 rounded-2xl rounded-tl-sm flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -203,7 +192,7 @@ export default function ContactCard() {
                   className="w-full bg-black/20 text-white placeholder-white/30 border border-white/10 rounded-full py-3 px-4 pr-12 focus:outline-none focus:border-[#980d6b]/50 focus:bg-black/40 transition-all text-sm"
                 />
                 <button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim()}
                   className="absolute right-2 p-2 bg-[#980d6b] hover:bg-[#b01e7d] disabled:opacity-50 disabled:hover:bg-[#980d6b] text-white rounded-full transition-all"
                 >
@@ -232,6 +221,16 @@ export default function ContactCard() {
             >
               <X className="w-6 h-6" />
             </motion.div>
+          ) : (
+            <motion.div
+              key="chat"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="relative"
+            >
+              <MessageCircle className="w-6 h-6" />
               <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border border-[#980d6b]"></span>
             </motion.div>
           )}
