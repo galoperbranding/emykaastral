@@ -2,6 +2,7 @@ from langdetect import detect
 from typing import Dict, List, Optional
 import random
 import re
+import unicodedata
 
 class EmyAI:
     def __init__(self):
@@ -154,6 +155,83 @@ class EmyAI:
             }
         }
 
+        # Rastreo de intención pendiente por usuario
+        # Guarda la última "oferta" + idioma que hizo Emyka para dar seguimiento
+        self.user_intent: Dict[str, str] = {}
+
+        # Respuestas de cierre de venta — persuasivas y con urgencia
+        self.closing_responses = {
+            # Cuando ofreció el Manual Personal (contenido restringido o pilares)
+            "offer_manual": {
+                "es": (
+                    "¡Me encanta tu interés! 💜 Tu Manual Personal incluye:\n\n"
+                    "📖 **4 PDFs exclusivos** con tu lectura completa:\n"
+                    "☀️ Sol — Tu identidad y propósito de vida\n"
+                    "💜 Venus — Tu forma de amar y vincularte\n"
+                    "🧠 Mercurio — Cómo funciona tu mente\n"
+                    "⚡ Marte — Tu motor de acción y disciplina\n\n"
+                    "Todo por solo **S/ 9.90** (pago único, sin suscripción).\n\n"
+                    "Solo necesito tu nombre, fecha, hora y lugar de nacimiento. "
+                    "Puedes completar tu pedido aquí mismo en la web ⬆️ en la sección 'Configura tu Pedido', "
+                    "o si prefieres, escríbeme tus datos por aquí y te guío. ✨"
+                ),
+                "en": (
+                    "I love your interest! 💜 Your Personal Manual includes:\n\n"
+                    "📖 **4 exclusive PDFs** with your complete reading:\n"
+                    "☀️ Sun — Your identity and life purpose\n"
+                    "💜 Venus — How you love and bond\n"
+                    "🧠 Mercury — How your mind works\n"
+                    "⚡ Mars — Your engine of action and discipline\n\n"
+                    "All for just **S/ 9.90** (one-time payment, no subscription).\n\n"
+                    "I just need your name, birth date, time, and place. "
+                    "You can place your order right here on the website ⬆️ in the 'Configure your Order' section, "
+                    "or if you prefer, send me your details here and I'll guide you. ✨"
+                )
+            },
+            # Cuando ofreció profundizar en un pilar (Sol, Venus, Mercurio, Marte)
+            "offer_deep_dive": {
+                "es": (
+                    "¡Perfecto! Para darte un análisis profundo y personalizado, necesito crear tu Manual Personal. 🌟\n\n"
+                    "El manual cubre los 4 pilares de tu ADN astral (Sol, Venus, Mercurio y Marte) en **4 PDFs detallados**, "
+                    "todo basado en tu carta natal única.\n\n"
+                    "💰 Valor: **S/ 9.90** (pago único)\n"
+                    "📩 Entrega: Digital, directo a tu correo\n\n"
+                    "¿Te animas? Solo completa el formulario en la sección 'Configura tu Pedido' aquí arriba ⬆️, "
+                    "o dame tu nombre y fecha de nacimiento y empezamos. 💜"
+                ),
+                "en": (
+                    "Perfect! To give you a deep, personalized analysis, I need to create your Personal Manual. 🌟\n\n"
+                    "The manual covers the 4 pillars of your astral DNA (Sun, Venus, Mercury, and Mars) in **4 detailed PDFs**, "
+                    "all based on your unique birth chart.\n\n"
+                    "💰 Price: **S/ 9.90** (one-time payment)\n"
+                    "📩 Delivery: Digital, straight to your email\n\n"
+                    "Ready to start? Just fill out the form in the 'Configure your Order' section above ⬆️, "
+                    "or give me your name and birth date and we'll get started. 💜"
+                )
+            },
+            # Cuando ofreció mostrar un ejemplo
+            "offer_example": {
+                "es": (
+                    "¡Claro! Aquí va un adelanto de lo que recibirías en tu Manual Personal: 🔮\n\n"
+                    "Por ejemplo, si tu Sol está en Escorpio, descubrirías que tu poder radica en la transformación, "
+                    "que necesitas profundidad emocional para sentirte viva, y que tu propósito está conectado con "
+                    "ayudar a otros a renacer de sus crisis.\n\n"
+                    "Eso es solo la punta del iceberg de UN pilar. Tu manual tiene **4 pilares completos** "
+                    "por solo **S/ 9.90**. 💜\n\n"
+                    "¿Quieres el tuyo? Completa tus datos en el formulario de arriba ⬆️ o escríbemelos aquí. ✨"
+                ),
+                "en": (
+                    "Of course! Here's a sneak peek of what you'd receive in your Personal Manual: 🔮\n\n"
+                    "For example, if your Sun is in Scorpio, you'd discover that your power lies in transformation, "
+                    "that you need emotional depth to feel alive, and that your purpose is connected to "
+                    "helping others rise from their crises.\n\n"
+                    "That's just the tip of the iceberg of ONE pillar. Your manual has **4 complete pillars** "
+                    "for just **S/ 9.90**. 💜\n\n"
+                    "Want yours? Fill in your details in the form above ⬆️ or send them to me here. ✨"
+                )
+            }
+        }
+
     def _ensure_context(self, user_id: str):
         """Inicializa el contexto del usuario si no existe."""
         with self._lock:
@@ -164,6 +242,37 @@ class EmyAI:
         """Agrega un mensaje al contexto del usuario de forma thread-safe."""
         with self._lock:
             self.user_context[user_id].append({"role": role, "content": content})
+
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Elimina acentos/diacríticos para comparaciones robustas. Ej: 'interpretación' → 'interpretacion'."""
+        nfkd = unicodedata.normalize('NFKD', text)
+        return ''.join(c for c in nfkd if not unicodedata.combining(c))
+
+    def _set_intent(self, user_id: str, intent_type: str, lang: str):
+        """Guarda la última intención/oferta + idioma hecha por Emyka para dar seguimiento."""
+        self.user_intent[user_id] = (intent_type, lang)
+
+    def _get_and_clear_intent(self, user_id: str):
+        """Obtiene y limpia la intención pendiente del usuario. Retorna (intent_type, lang) o ("", "")."""
+        return self.user_intent.pop(user_id, ("", ""))
+
+    def _is_affirmative(self, message: str) -> bool:
+        """Detecta si el mensaje es una respuesta afirmativa."""
+        msg = message.lower().strip().rstrip("!.?")
+        affirmative_words = [
+            # Español
+            "sí", "si", "claro", "dale", "ok", "va", "bueno", "por supuesto",
+            "obvio", "quiero", "me interesa", "dime", "cuéntame", "sí quiero",
+            "claro que sí", "ya", "porfa", "por favor", "eso", "seguro",
+            "me encantaría", "adelante", "vamos", "perfecto", "genial",
+            # Inglés
+            "yes", "yeah", "yep", "sure", "of course", "absolutely",
+            "definitely", "please", "i want", "i'd like", "i would like",
+            "tell me", "go ahead", "let's do it", "sounds good", "great",
+            "interested", "i'm interested", "show me"
+        ]
+        return any(w in msg for w in affirmative_words)
 
     def _detect_language(self, message: str) -> str:
         """Detecta el idioma del mensaje. Retorna 'es' o 'en'.
@@ -240,10 +349,23 @@ class EmyAI:
             return text
 
         msg_lower = message.lower()
+        # Versión normalizada sin acentos para comparaciones más robustas
+        msg_normalized = self._normalize(msg_lower)
 
-        # 0. Detectar si la pregunta es sobre contenido restringido (PDF)
+        # 0. PRIMERO: Verificar si hay una intención pendiente y el usuario respondió afirmativamente
+        pending_intent, intent_lang = self._get_and_clear_intent(user_id)
+        if pending_intent and self._is_affirmative(message):
+            # Usar el idioma de la conversación previa (no re-detectar en frases cortas como "sí")
+            response_lang = intent_lang or lang
+            if pending_intent in self.closing_responses:
+                response = self.closing_responses[pending_intent][response_lang]
+                response = apply_tone(response)
+                self._append_context(user_id, "emy", response)
+                return response
+
+        # 1. Detectar si la pregunta es sobre contenido restringido (PDF)
         restricted = self.restricted_topics.get(lang, self.restricted_topics["es"])
-        if any(topic in msg_lower for topic in restricted):
+        if any(topic in msg_normalized for topic in restricted):
             if lang == "en":
                 response = (
                     "That information is part of your Personal Manual! 😊 Out of respect for those who have "
@@ -259,10 +381,11 @@ class EmyAI:
                     "cómo obtenerlo?"
                 )
             response = apply_tone(response)
+            self._set_intent(user_id, "offer_manual", lang)
             self._append_context(user_id, "emy", response)
             return response
 
-        # 1. Detectar intención de venta directa o saludo
+        # 2. Detectar intención de venta directa o saludo
         intent = self._detect_intent(message, lang)
 
         if intent == "sales_inquiry":
@@ -277,6 +400,7 @@ class EmyAI:
                     "¿Te gustaría que te muestre un ejemplo de lo que recibirás? ✨"
                 )
             response = apply_tone(response)
+            self._set_intent(user_id, "offer_example", lang)
             self._append_context(user_id, "emy", response)
             return response
 
@@ -295,7 +419,7 @@ class EmyAI:
             self._append_context(user_id, "emy", response)
             return response
 
-        # 2. Verificar Pilares de Venta (Sol, Venus, Mercurio, Marte)
+        # 3. Verificar Pilares de Venta (Sol, Venus, Mercurio, Marte)
         for pillar, data in self.sales_pillars.items():
             keywords = data["keywords"].get(lang, data["keywords"]["es"])
             if any(k in msg_lower for k in keywords):
@@ -305,10 +429,11 @@ class EmyAI:
                 else:
                     response += " ¿Te gustaría profundizar en esto?"
                 response = apply_tone(response)
+                self._set_intent(user_id, "offer_deep_dive", lang)
                 self._append_context(user_id, "emy", response)
                 return response
 
-        # 3. Verificar Conocimiento General (Base de Conocimiento)
+        # 4. Verificar Conocimiento General (Base de Conocimiento)
         for topic_key, topic_data in self.knowledge_base.items():
             keywords = topic_data["keywords"].get(lang, topic_data["keywords"]["es"])
             # Para "revolucion_solar", necesitamos que ambas keywords coincidan
@@ -345,7 +470,7 @@ class EmyAI:
                     self._append_context(user_id, "emy", response)
                     return response
 
-        # 4. Fallback empático + Venta suave
+        # 5. Fallback empático + Venta suave
         if lang == "en":
             fallback_responses = [
                 "Interesting. Everything in your sky has a reason. ✨ That's exactly the kind of answers we seek to provide in your Personal Manual.",
