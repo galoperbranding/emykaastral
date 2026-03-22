@@ -24,3 +24,81 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Liquid glass utility for consistent backdrop-filter across browsers */
+.liquid-glass {
+  position: relative;
+  background-color: rgba(255,255,255,0.02);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.liquid-glass:hover {
+  background-color: rgba(0,0,0,0.04);
+}
+
+/* Safari fallback: pseudo-element to strengthen visual blur when needed */
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0.02);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  z-index: -1;
+}
+
+/* Fallback for browsers or system settings where backdrop-filter is unavailable
+   (e.g. macOS Reduce Transparency). Uses gradients and subtle borders/shadows
+   to simulate the glass look without relying on actual backdrop filtering. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .liquid-glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .liquid-glass::before {
+    display: none;
+  }
+}
+
+/* Colored variant for buttons and accents that need the glass effect */
+.liquid-glass-colored {
+  position: relative;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  box-shadow: 0 8px 24px rgba(152,13,107,0.25);
+}
+.liquid-glass-colored:hover {
+  filter: brightness(0.95);
+}
+
+/* Glass button style: same look as 'Detalles del Manual' card */
+.glass-button {
+  position: relative;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255,255,255,0.06);
+  color: #fff;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.6rem 1.25rem;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+  transition: background-color 180ms ease, transform 120ms ease, box-shadow 180ms ease;
+}
+.glass-button:hover {
+  background-color: rgba(0,0,0,0.06);
+}
+
+
+
+
